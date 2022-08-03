@@ -26,28 +26,56 @@ class DateRange extends Component {
   }
   calcNewSelection = (value, isSingleValue = true) => {
     const focusedRange = this.props.focusedRange || this.state.focusedRange;
-    const { ranges, onChange, maxDate, moveRangeOnFirstSelection, disabledDates } = this.props;
+    const {
+      ranges,
+      onChange,
+      maxDate,
+      moveRangeOnFirstSelection,
+      retainEndDateOnFirstSelection,
+      disabledDates,
+    } = this.props;
     const focusedRangeIndex = focusedRange[0];
     const selectedRange = ranges[focusedRangeIndex];
     if (!selectedRange || !onChange) return {};
-
     let { startDate, endDate } = selectedRange;
-    if (!endDate) endDate = new Date(startDate);
+
+    // if (!endDate) endDate = new Date(startDate);
 
     let startTime = getTime(startDate);
     let endTime = getTime(endDate);
 
+    const now = new Date();
+    
     let nextFocusRange;
     if (!isSingleValue) {
       startDate = value.startDate;
       endDate = value.endDate;
     } else if (focusedRange[1] === 0) {
       // startDate selection
+      // const sameDay = isSameDay(startDate, value);
+      // const dayOffset = differenceInCalendarDays(endDate, startDate);
+      // if (sameDay) startTime = getTime(value);
+      // startDate = value;
+      // endDate = moveRangeOnFirstSelection || sameDay ? addDays(value, dayOffset) : value;
+      // if (maxDate) endDate = min([setTime(endDate, endTime), maxDate]);
+
       const sameDay = isSameDay(startDate, value);
-      const dayOffset = differenceInCalendarDays(endDate, startDate);
+      const dayOffset = differenceInCalendarDays(endDate || now, startDate);
+      const calculateEndDate = () => {
+        if (moveRangeOnFirstSelection || sameDay) {
+          return addDays(value, dayOffset);
+        }
+        if (retainEndDateOnFirstSelection) {
+          if (!endDate || isBefore(value, endDate)) {
+            return endDate;
+          }
+          return value;
+        }
+        return value || now;
+      };
       if (sameDay) startTime = getTime(value);
       startDate = value;
-      endDate = moveRangeOnFirstSelection || sameDay ? addDays(value, dayOffset) : value;
+      endDate = calculateEndDate();
       if (maxDate) endDate = min([setTime(endDate, endTime), maxDate]);
       nextFocusRange = [focusedRange[0], 1];
     } else {
@@ -122,7 +150,7 @@ class DateRange extends Component {
     }
     const { rangeColors, ranges } = this.props;
     const focusedRange = this.props.focusedRange || this.state.focusedRange;
-    const color = ranges[focusedRange[0]].color || rangeColors[focusedRange[0]] || color;
+    const color = ranges[focusedRange[0]]?.color || rangeColors[focusedRange[0]] || color;
     this.setState({ preview: { ...val.range, color } });
   };
   render() {
@@ -151,6 +179,7 @@ DateRange.defaultProps = {
   classNames: {},
   ranges: [],
   moveRangeOnFirstSelection: false,
+  retainEndDateOnFirstSelection: false,
   rangeColors: ['#3d91ff', '#3ecf8e', '#fed14c'],
   disabledDates: [],
 };
@@ -162,6 +191,7 @@ DateRange.propTypes = {
   className: PropTypes.string,
   ranges: PropTypes.arrayOf(rangeShape),
   moveRangeOnFirstSelection: PropTypes.bool,
+  retainEndDateOnFirstSelection: PropTypes.bool,
 };
 
 export default DateRange;
