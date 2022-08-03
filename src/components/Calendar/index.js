@@ -353,7 +353,7 @@ class Calendar extends PureComponent {
     }
   };
 
-  onDragSelectionEnd = date => {
+  onDragSelectionEnd = (date, onlyDate = false) => {
     const { updateRange, displayMode, onChange, dragSelectionEnabled } = this.props;
 
     if (!dragSelectionEnabled) return;
@@ -367,7 +367,7 @@ class Calendar extends PureComponent {
       endDate: date,
     };
     if (displayMode !== 'dateRange' || isSameDay(newRange.startDate, date)) {
-      this.setState({ drag: { status: false, range: {} } }, () => onChange && onChange(date));
+      this.setState({ drag: { status: false, range: {} } }, () => onChange && onChange(date, onlyDate));
     } else {
       this.setState({ drag: { status: false, range: {} } }, () => {
         updateRange && updateRange(newRange);
@@ -472,7 +472,7 @@ class Calendar extends PureComponent {
                       disabledDay={disabledDay}
                       month={monthStep}
                       onDragSelectionStart={this.onDragSelectionStart}
-                      onDragSelectionEnd={this.onDragSelectionEnd}
+                      onDragSelectionEnd={(date) => this.onDragSelectionEnd(date, true)}
                       onDragSelectionMove={this.onDragSelectionMove}
                       onMouseLeave={() => onPreviewChange && onPreviewChange()}
                       styles={this.styles}
@@ -513,7 +513,7 @@ class Calendar extends PureComponent {
                   disabledDay={disabledDay}
                   month={monthStep}
                   onDragSelectionStart={this.onDragSelectionStart}
-                  onDragSelectionEnd={this.onDragSelectionEnd}
+                  onDragSelectionEnd={(date) => this.onDragSelectionEnd(date, true)}
                   onDragSelectionMove={this.onDragSelectionMove}
                   onMouseLeave={() => onPreviewChange && onPreviewChange()}
                   styles={this.styles}

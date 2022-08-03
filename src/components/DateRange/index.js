@@ -24,7 +24,7 @@ class DateRange extends Component {
     };
     this.styles = generateStyles([coreStyles, props.classNames]);
   }
-  calcNewSelection = (value, isSingleValue = true) => {
+  calcNewSelection = (value, isSingleValue = true, onlyDate = false) => {
     const focusedRange = this.props.focusedRange || this.state.focusedRange;
     const {
       ranges,
@@ -39,8 +39,6 @@ class DateRange extends Component {
     if (!selectedRange || !onChange) return {};
     let { startDate, endDate } = selectedRange;
 
-    // if (!endDate) endDate = new Date(startDate);
-
     let startTime = getTime(startDate);
     let endTime = getTime(endDate);
 
@@ -51,14 +49,6 @@ class DateRange extends Component {
       startDate = value.startDate;
       endDate = value.endDate;
     } else if (focusedRange[1] === 0) {
-      // startDate selection
-      // const sameDay = isSameDay(startDate, value);
-      // const dayOffset = differenceInCalendarDays(endDate, startDate);
-      // if (sameDay) startTime = getTime(value);
-      // startDate = value;
-      // endDate = moveRangeOnFirstSelection || sameDay ? addDays(value, dayOffset) : value;
-      // if (maxDate) endDate = min([setTime(endDate, endTime), maxDate]);
-
       const sameDay = isSameDay(startDate, value);
       const dayOffset = differenceInCalendarDays(endDate || now, startDate);
       const calculateEndDate = () => {
@@ -73,13 +63,13 @@ class DateRange extends Component {
         }
         return value || now;
       };
-      if (sameDay) startTime = getTime(value);
+      if (!onlyDate) startTime = getTime(value);
       startDate = value;
       endDate = calculateEndDate();
       if (maxDate) endDate = min([setTime(endDate, endTime), maxDate]);
       nextFocusRange = [focusedRange[0], 1];
     } else {
-      if (isSameDay(endDate, value)) endTime = getTime(value);
+      if (!onlyDate) endTime = getTime(value);
       endDate = value;
     }
 
@@ -88,7 +78,7 @@ class DateRange extends Component {
     if (isBefore(setTime(endDate, endTime), setTime(startDate, startTime))) {
       isStartDateSelected = !isStartDateSelected;
       [startDate, endDate] = [endDate, startDate];
-      [startTime, endTime] = [endTime, startTime];
+      // [startTime, endTime] = [endTime, startTime];
     }
 
     const inValidDatesWithinRange = disabledDates.filter(disabledDate =>
@@ -120,13 +110,13 @@ class DateRange extends Component {
       nextFocusRange: nextFocusRange,
     };
   };
-  setSelection = (value, isSingleValue) => {
+  setSelection = (value, isSingleValue, onlyDate=false) => {
     const { onChange, ranges, onRangeFocusChange } = this.props;
     const focusedRange = this.props.focusedRange || this.state.focusedRange;
     const focusedRangeIndex = focusedRange[0];
     const selectedRange = ranges[focusedRangeIndex];
     if (!selectedRange) return;
-    const newSelection = this.calcNewSelection(value, isSingleValue);
+    const newSelection = this.calcNewSelection(value, isSingleValue, onlyDate);
     onChange({
       [selectedRange.key || `range${focusedRangeIndex + 1}`]: {
         ...selectedRange,
@@ -165,7 +155,7 @@ class DateRange extends Component {
         {...this.props}
         displayMode="dateRange"
         className={classnames(this.styles.dateRangeWrapper, this.props.className)}
-        onChange={this.setSelection}
+        onChange={(val, onlyDate) => this.setSelection(val, true, onlyDate)}
         updateRange={val => this.setSelection(val, false)}
         ref={target => {
           this.calendar = target;
